@@ -15,4 +15,5 @@ func NewCountryRoutes(handler *handlers.CountryHandler) *CountryRoutes {
 
 func (cr *CountryRoutes) SetupCountriesRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /countries", cr.handler.ListCountries)
+	mux.HandleFunc("GET /countries/{countryId}", cr.handler.GetCountryById)
 }

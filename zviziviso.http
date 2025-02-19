@@ -2,3 +2,9 @@
 
 ###
 GET {{baseUrl}}/countries HTTP/1.1
+
+###
+GET {{baseUrl}}/countries/1 HTTP/1.1
+
+###
+GET {{baseUrl}}/countries/hello HTTP/1.1

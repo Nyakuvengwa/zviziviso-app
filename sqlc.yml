@@ -5,7 +5,7 @@ sql:
     schema: "./api/internal/db/schema.sql"
     gen:
       go:
-        package: "zvizivisodb"
+        package: "repository"
         out: "./api/internal/db"
         sql_package: "pgx/v5"
         emit_interface: true

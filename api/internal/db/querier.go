@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.28.0
 
-package zvizivisodb
+package repository
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 
 type Querier interface {
 	GetCountry(ctx context.Context, id int32) (Country, error)
-	ListCountries(ctx context.Context, arg ListCountriesParams) ([]Country, error)
+	ListCountries(ctx context.Context) ([]Country, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -1,0 +1,4 @@
+@baseUrl  = http://localhost:7653/
+
+###
+GET {{baseUrl}}/countries HTTP/1.1

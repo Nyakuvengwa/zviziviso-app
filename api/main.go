@@ -1,24 +1,56 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"log"
 	"net/http"
-	"text/template"
+	"os"
+	repository "zviziviso-app/api/internal/db"
+	"zviziviso-app/api/internal/handlers"
+	"zviziviso-app/api/internal/http/middleware"
+	"zviziviso-app/api/internal/routing"
+	"zviziviso-app/api/internal/services"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func main() {
-	indexHandler := func(w http.ResponseWriter, r *http.Request) {
-		templateIndex := template.Must(template.ParseFiles("./api/index.html"))
-		templateIndex.Execute(w, nil)
+	ctx := context.Background()
+	connectionString := os.Getenv("ZVIZIVISO_DB_CONNECTION_STRING")
+	if connectionString == "" {
+		log.Fatal("Connection string is not set")
 	}
+	conn, err := pgx.Connect(ctx, connectionString)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer conn.Close(ctx)
 
-	http.HandleFunc("/", indexHandler)
+	dbQueries := repository.New(conn)
 
-	http.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
+	router := http.NewServeMux()
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Print("Hello World")
+	})
+
+	router.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 	})
 
-	log.Fatal(http.ListenAndServe(":7653", nil))
+	handler := handlers.NewCountryHandler(services.NewCountryService(*dbQueries))
+	countryRoutes := routing.NewCountryRoutes(handler)
+	countryRoutes.SetupCountriesRoutes(router)
+
+	stack := middleware.CreateStack(
+		middleware.Logging,
+	)
+	server := http.Server{
+		Addr:    ":7653",
+		Handler: stack(router),
+	}
+
+	log.Fatal(server.ListenAndServe())
 }

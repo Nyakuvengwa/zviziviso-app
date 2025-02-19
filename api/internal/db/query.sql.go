@@ -3,14 +3,14 @@
 //   sqlc v1.28.0
 // source: query.sql
 
-package zvizivisodb
+package repository
 
 import (
 	"context"
 )
 
 const getCountry = `-- name: GetCountry :one
-SELECT id, iso_code3, name, dialing_code
+SELECT id, iso_code3, country_name, dialing_code
 FROM countries
 WHERE id = $1
 `
@@ -21,26 +21,20 @@ func (q *Queries) GetCountry(ctx context.Context, id int32) (Country, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.IsoCode3,
-		&i.Name,
+		&i.CountryName,
 		&i.DialingCode,
 	)
 	return i, err
 }
 
 const listCountries = `-- name: ListCountries :many
-SELECT id, iso_code3, name, dialing_code
+SELECT id, iso_code3, country_name, dialing_code
 FROM countries
-ORDER BY name  
-LIMIT $1 OFFSET $2
+ORDER BY country_name
 `
 
-type ListCountriesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
-}
-
-func (q *Queries) ListCountries(ctx context.Context, arg ListCountriesParams) ([]Country, error) {
-	rows, err := q.db.Query(ctx, listCountries, arg.Limit, arg.Offset)
+func (q *Queries) ListCountries(ctx context.Context) ([]Country, error) {
+	rows, err := q.db.Query(ctx, listCountries)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +45,7 @@ func (q *Queries) ListCountries(ctx context.Context, arg ListCountriesParams) ([
 		if err := rows.Scan(
 			&i.ID,
 			&i.IsoCode3,
-			&i.Name,
+			&i.CountryName,
 			&i.DialingCode,
 		); err != nil {
 			return nil, err

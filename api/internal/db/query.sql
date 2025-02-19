@@ -1,11 +1,10 @@
 -- name: ListCountries :many
-SELECT id, iso_code3, name, dialing_code
+SELECT id, iso_code3, country_name, dialing_code
 FROM countries
-ORDER BY name  
-LIMIT $1 OFFSET $2;
+ORDER BY country_name;
 
 -- name: GetCountry :one
-SELECT id, iso_code3, name, dialing_code
+SELECT id, iso_code3, country_name, dialing_code
 FROM countries
 WHERE id = $1;
 

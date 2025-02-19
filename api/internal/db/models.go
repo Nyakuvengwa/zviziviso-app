@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.28.0
 
-package zvizivisodb
+package repository
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
@@ -11,13 +11,13 @@ import (
 type Country struct {
 	ID          int32       `json:"id"`
 	IsoCode3    string      `json:"iso_code3"`
-	Name        string      `json:"name"`
+	CountryName string      `json:"country_name"`
 	DialingCode pgtype.Text `json:"dialing_code"`
 }
 
 type Province struct {
-	ID        int32       `json:"id"`
-	CountryID int32       `json:"country_id"`
-	Name      string      `json:"name"`
-	Code      pgtype.Text `json:"code"`
+	ID           int32       `json:"id"`
+	CountryID    int32       `json:"country_id"`
+	ProvinceName string      `json:"province_name"`
+	Code         pgtype.Text `json:"code"`
 }

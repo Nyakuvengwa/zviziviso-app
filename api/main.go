@@ -3,22 +3,24 @@ package main
 import (
 	"context"
 	"fmt"
-	"html"
 	"log"
-	"net/http"
 	"os"
-	repository "zviziviso-app/api/internal/db"
-	"zviziviso-app/api/internal/handlers"
-	"zviziviso-app/api/internal/http/middleware"
-	"zviziviso-app/api/internal/routing"
-	"zviziviso-app/api/internal/services"
+	repository "zviziviso-app/internal/db"
 
 	"github.com/jackc/pgx/v5"
 )
 
 func main() {
+
+	appConfig := applicationConfig{
+		address: os.Getenv("ZVIZIVISO_ADDRESS"),
+	}
+
+	fmt.Println(appConfig)
 	ctx := context.Background()
+
 	connectionString := os.Getenv("ZVIZIVISO_DB_CONNECTION_STRING")
+
 	if connectionString == "" {
 		log.Fatal("Connection string is not set")
 	}
@@ -30,27 +32,12 @@ func main() {
 	defer conn.Close(ctx)
 
 	dbQueries := repository.New(conn)
-
-	router := http.NewServeMux()
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Print("Hello World")
-	})
-
-	router.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	})
-
-	handler := handlers.NewCountryHandler(services.NewCountryService(*dbQueries))
-	countryRoutes := routing.NewCountryRoutes(handler)
-	countryRoutes.SetupCountriesRoutes(router)
-
-	stack := middleware.CreateStack(
-		middleware.Logging,
-	)
-	server := http.Server{
-		Addr:    ":7653",
-		Handler: stack(router),
+	app := Application{
+		config:  appConfig,
+		service: dbQueries,
 	}
 
-	log.Fatal(server.ListenAndServe())
+	mux := app.Mount()
+
+	log.Fatal(app.Run(mux))
 }

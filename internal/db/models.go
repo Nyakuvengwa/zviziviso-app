@@ -5,8 +5,22 @@
 package repository
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type Address struct {
+	AddressID     uuid.UUID          `json:"address_id"`
+	AddressType   pgtype.Text        `json:"address_type"`
+	Address       string             `json:"address"`
+	City          pgtype.Text        `json:"city"`
+	Province      pgtype.Text        `json:"province"`
+	PostalCode    pgtype.Text        `json:"postal_code"`
+	ContactPerson pgtype.Text        `json:"contact_person"`
+	ContactNumber pgtype.Text        `json:"contact_number"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
 
 type Country struct {
 	ID          int32       `json:"id"`
@@ -15,9 +29,83 @@ type Country struct {
 	DialingCode pgtype.Text `json:"dialing_code"`
 }
 
+type DeathNotice struct {
+	DeathNoticeID    uuid.UUID          `json:"death_notice_id"`
+	FullName         string             `json:"full_name"`
+	DateOfDeath      pgtype.Date        `json:"date_of_death"`
+	Age              pgtype.Int4        `json:"age"`
+	CauseOfDeath     pgtype.Text        `json:"cause_of_death"`
+	FuneralParlourID pgtype.UUID        `json:"funeral_parlour_id"`
+	AddressID        pgtype.UUID        `json:"address_id"`
+	Obituary         pgtype.Text        `json:"obituary"`
+	ImageUrl         pgtype.Text        `json:"image_url"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+}
+
+type DeathNoticeComment struct {
+	CommentID     uuid.UUID          `json:"comment_id"`
+	DeathNoticeID pgtype.UUID        `json:"death_notice_id"`
+	UserID        pgtype.UUID        `json:"user_id"`
+	CommentText   string             `json:"comment_text"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+type DeathNoticeCondolence struct {
+	CondolenceID   uuid.UUID          `json:"condolence_id"`
+	DeathNoticeID  pgtype.UUID        `json:"death_notice_id"`
+	UserID         pgtype.UUID        `json:"user_id"`
+	CondolenceText string             `json:"condolence_text"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
+type DeathNoticeDonation struct {
+	DonationID    uuid.UUID          `json:"donation_id"`
+	DeathNoticeID pgtype.UUID        `json:"death_notice_id"`
+	UserID        pgtype.UUID        `json:"user_id"`
+	Amount        pgtype.Numeric     `json:"amount"`
+	DonationDate  pgtype.Timestamptz `json:"donation_date"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+type DeathNoticeEvent struct {
+	EventID       uuid.UUID          `json:"event_id"`
+	DeathNoticeID pgtype.UUID        `json:"death_notice_id"`
+	EventType     string             `json:"event_type"`
+	EventDate     pgtype.Timestamptz `json:"event_date"`
+	AddressID     pgtype.UUID        `json:"address_id"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
+}
+
+type FuneralParlour struct {
+	FuneralParlourID uuid.UUID          `json:"funeral_parlour_id"`
+	Name             string             `json:"name"`
+	Address          pgtype.Text        `json:"address"`
+	ContactNumber    pgtype.Text        `json:"contact_number"`
+	Email            pgtype.Text        `json:"email"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Province struct {
 	ID           int32       `json:"id"`
 	CountryID    int32       `json:"country_id"`
 	ProvinceName string      `json:"province_name"`
 	Code         pgtype.Text `json:"code"`
+}
+
+type User struct {
+	UserID       uuid.UUID          `json:"user_id"`
+	Username     string             `json:"username"`
+	Email        string             `json:"email"`
+	PasswordHash string             `json:"password_hash"`
+	FirstName    pgtype.Text        `json:"first_name"`
+	LastName     pgtype.Text        `json:"last_name"`
+	Role         pgtype.Text        `json:"role"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }

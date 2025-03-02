@@ -27,6 +27,55 @@ func (q *Queries) GetCountry(ctx context.Context, id int32) (Country, error) {
 	return i, err
 }
 
+const getProvincesByCountryId = `-- name: GetProvincesByCountryId :many
+SELECT id, country_id, province_name, code 
+FROM provinces
+WHERE country_id = $1
+`
+
+func (q *Queries) GetProvincesByCountryId(ctx context.Context, countryID int32) ([]Province, error) {
+	rows, err := q.db.Query(ctx, getProvincesByCountryId, countryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Province{}
+	for rows.Next() {
+		var i Province
+		if err := rows.Scan(
+			&i.ID,
+			&i.CountryID,
+			&i.ProvinceName,
+			&i.Code,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getProvincesById = `-- name: GetProvincesById :one
+SELECT id, country_id, province_name, code 
+FROM provinces
+WHERE id = $1
+`
+
+func (q *Queries) GetProvincesById(ctx context.Context, id int32) (Province, error) {
+	row := q.db.QueryRow(ctx, getProvincesById, id)
+	var i Province
+	err := row.Scan(
+		&i.ID,
+		&i.CountryID,
+		&i.ProvinceName,
+		&i.Code,
+	)
+	return i, err
+}
+
 const listCountries = `-- name: ListCountries :many
 SELECT id, iso_code3, country_name, dialing_code
 FROM countries

@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 )
 
 type Application struct {
@@ -23,9 +24,8 @@ func (app *Application) Mount() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-
-	// add accept  application json header
-	r.Use(middleware.SetHeader("Content-Type", "application/json"))
+	r.Use(middleware.AllowContentType("application/json"))
+	r.Use(render.SetContentType(render.ContentTypeHTML))
 
 	r.Route("/v1", func(r chi.Router) {
 
@@ -35,6 +35,11 @@ func (app *Application) Mount() http.Handler {
 				r.Get("/", app.GetCountryById)
 				r.Get("/provinces", app.GetProvincesByCountryId)
 			})
+		})
+
+		r.Route("/user", func(r chi.Router) {
+			r.Post("/", app.CreateNewUser)
+			r.Get("/{userId}", app.GetUserSummaryDetails)
 		})
 	})
 

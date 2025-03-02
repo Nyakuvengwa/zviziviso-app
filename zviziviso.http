@@ -12,3 +12,18 @@ GET {{baseUrl}}/countries/{{countryId}} HTTP/1.1
 
 ###
 GET {{baseUrl}}/countries/{{countryId}}/provinces HTTP/1.1
+
+###
+POST {{baseUrl}}/user HTTP/1.1
+content-type: application/json
+
+{
+  "username": "Test",
+  "email": "Test@zviziviso.io",
+  "password": "password",
+  "first_name": "Test",
+  "last_name": "Test"
+}
+
+###
+GET {{baseUrl}}/user/7ea223c6-b63a-4b7c-b66f-c1377a276434 HTTP/1.1

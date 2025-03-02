@@ -7,7 +7,39 @@ package repository
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createUserDetails = `-- name: CreateUserDetails :one
+INSERT INTO users (username, email, password_hash, first_name, last_name, role)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING user_id
+`
+
+type CreateUserDetailsParams struct {
+	Username     string      `json:"username"`
+	Email        string      `json:"email"`
+	PasswordHash string      `json:"password_hash"`
+	FirstName    pgtype.Text `json:"first_name"`
+	LastName     pgtype.Text `json:"last_name"`
+	Role         pgtype.Text `json:"role"`
+}
+
+func (q *Queries) CreateUserDetails(ctx context.Context, arg CreateUserDetailsParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createUserDetails,
+		arg.Username,
+		arg.Email,
+		arg.PasswordHash,
+		arg.FirstName,
+		arg.LastName,
+		arg.Role,
+	)
+	var user_id uuid.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
+}
 
 const getCountry = `-- name: GetCountry :one
 SELECT id, iso_code3, country_name, dialing_code
@@ -118,6 +150,33 @@ func (q *Queries) GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEma
 	return items, nil
 }
 
+const getUserSummaryDetails = `-- name: GetUserSummaryDetails :one
+SELECT user_id, username, first_name, last_name, role
+FROM users
+WHERE user_id = $1
+`
+
+type GetUserSummaryDetailsRow struct {
+	UserID    uuid.UUID   `json:"user_id"`
+	Username  string      `json:"username"`
+	FirstName pgtype.Text `json:"first_name"`
+	LastName  pgtype.Text `json:"last_name"`
+	Role      pgtype.Text `json:"role"`
+}
+
+func (q *Queries) GetUserSummaryDetails(ctx context.Context, userID uuid.UUID) (GetUserSummaryDetailsRow, error) {
+	row := q.db.QueryRow(ctx, getUserSummaryDetails, userID)
+	var i GetUserSummaryDetailsRow
+	err := row.Scan(
+		&i.UserID,
+		&i.Username,
+		&i.FirstName,
+		&i.LastName,
+		&i.Role,
+	)
+	return i, err
+}
+
 const listCountries = `-- name: ListCountries :many
 SELECT id, iso_code3, country_name, dialing_code
 FROM countries
@@ -147,4 +206,45 @@ func (q *Queries) ListCountries(ctx context.Context) ([]Country, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateUserDetails = `-- name: UpdateUserDetails :exec
+UPDATE users
+SET username = $2, first_name = $3, last_name = $4, role = $5
+WHERE user_id = $1
+`
+
+type UpdateUserDetailsParams struct {
+	UserID    uuid.UUID   `json:"user_id"`
+	Username  string      `json:"username"`
+	FirstName pgtype.Text `json:"first_name"`
+	LastName  pgtype.Text `json:"last_name"`
+	Role      pgtype.Text `json:"role"`
+}
+
+func (q *Queries) UpdateUserDetails(ctx context.Context, arg UpdateUserDetailsParams) error {
+	_, err := q.db.Exec(ctx, updateUserDetails,
+		arg.UserID,
+		arg.Username,
+		arg.FirstName,
+		arg.LastName,
+		arg.Role,
+	)
+	return err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE users
+SET password_hash = $2
+WHERE user_id = $1
+`
+
+type UpdateUserPasswordParams struct {
+	UserID       uuid.UUID `json:"user_id"`
+	PasswordHash string    `json:"password_hash"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.Exec(ctx, updateUserPassword, arg.UserID, arg.PasswordHash)
+	return err
 }

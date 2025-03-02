@@ -8,6 +8,10 @@ import (
 	"net/mail"
 	"strings"
 	repository "zviziviso-app/internal/db"
+	"zviziviso-app/internal/helpers"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type CreateUserRequest struct {
@@ -16,7 +20,6 @@ type CreateUserRequest struct {
 	Password  string `json:"password"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Role      string `json:"role"`
 }
 
 func (app *Application) CreateNewUser(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +41,6 @@ func (app *Application) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//
 	users, err := app.service.GetUserByEmailOrUsername(ctx, repository.GetUserByEmailOrUsernameParams{Username: user.Username, Email: user.Email})
 
 	if err != nil {
@@ -61,19 +63,58 @@ func (app *Application) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//TODO: hash password
+	passwordHash, err := helpers.GeneratePasswordHash(user.Password)
 
-	passwordHash := generatePasswordHash(user)
+	if err != nil {
+		log.Printf("Error: %v, ", err)
+		NewProblemDetailsErrorResponse(w, http.StatusInternalServerError, INTERNAL_SERVER_ERROR, "Error saving user details. Contact support.")
+		return
+	}
 
-	//TODO: save user to database
+	userId, err := app.service.CreateUserDetails(ctx, repository.CreateUserDetailsParams{
+		Username:     user.Username,
+		Email:        user.Email,
+		PasswordHash: passwordHash,
+		FirstName:    pgtype.Text{String: user.FirstName, Valid: true},
+		LastName:     pgtype.Text{String: user.LastName, Valid: true},
+		Role:         pgtype.Text{String: "User", Valid: true},
+	})
 
-	//TODO: return user details
+	if err != nil {
+		log.Printf("DB Error: %v, ", err)
+		NewProblemDetailsErrorResponse(w, http.StatusInternalServerError, INTERNAL_SERVER_ERROR, "Error saving user details. Contact support.")
+		return
+	}
 
-	json.NewEncoder(w).Encode(user)
+	result, err := app.service.GetUserSummaryDetails(ctx, userId)
+
+	if err != nil {
+		log.Printf("DB Error: %v, ", err)
+		NewProblemDetailsErrorResponse(w, http.StatusInternalServerError, INTERNAL_SERVER_ERROR, "Error saving user details. Contact support.")
+		return
+	}
+
+	json.NewEncoder(w).Encode(result)
 }
 
-func generatePasswordHash(user CreateUserRequest) any {
-	panic("unimplemented")
+func (app *Application) GetUserSummaryDetails(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userId := r.PathValue("userId")
+	err := uuid.Validate(userId)
+	if err != nil {
+		NewProblemDetailsErrorResponse(w, http.StatusBadRequest, "Invalid user id provided", "Invalid url path parameter provided.")
+		return
+	}
+
+	countries, err := app.service.GetUserSummaryDetails(ctx, uuid.MustParse(userId))
+
+	if err != nil {
+		log.Printf("Error: %v, ", err)
+		NewProblemDetailsErrorResponse(w, http.StatusInternalServerError, "Unhandled server error", err.Error())
+		return
+	}
+	json.NewEncoder(w).Encode(countries)
+
 }
 
 func validateUser(user CreateUserRequest) error {
@@ -87,7 +128,9 @@ func validateUser(user CreateUserRequest) error {
 		errorMessages = append(errorMessages, "Email cannot be empty")
 	} else {
 		_, err := mail.ParseAddress(user.Email)
-		errorMessages = append(errorMessages, err.Error())
+		if err != nil {
+			errorMessages = append(errorMessages, err.Error())
+		}
 	}
 
 	if strings.TrimSpace(user.Password) == "" {
@@ -102,9 +145,15 @@ func validateUser(user CreateUserRequest) error {
 		errorMessages = append(errorMessages, "Last name cannot be empty")
 	}
 
+	var filteredErrorMessages []string
+	for _, msg := range errorMessages {
+		if msg != "" {
+			filteredErrorMessages = append(filteredErrorMessages, msg)
+		}
+	}
 	// Check if errorMessages has any strings in it and if it has return error
-	if len(errorMessages) > 0 {
-		return fmt.Errorf(strings.Join(errorMessages, ", "))
+	if len(filteredErrorMessages) > 0 {
+		return fmt.Errorf(strings.Join(filteredErrorMessages, ", "))
 	}
 	return nil
 }

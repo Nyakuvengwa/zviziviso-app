@@ -77,6 +77,47 @@ func (q *Queries) GetProvincesById(ctx context.Context, id int32) (Province, err
 	return i, err
 }
 
+const getUserByEmailOrUsername = `-- name: GetUserByEmailOrUsername :many
+SELECT user_id, username, email, password_hash, first_name, last_name, role, created_at, updated_at
+FROM users
+WHERE email = $1 OR username = $2
+`
+
+type GetUserByEmailOrUsernameParams struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+}
+
+func (q *Queries) GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEmailOrUsernameParams) ([]User, error) {
+	rows, err := q.db.Query(ctx, getUserByEmailOrUsername, arg.Email, arg.Username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.UserID,
+			&i.Username,
+			&i.Email,
+			&i.PasswordHash,
+			&i.FirstName,
+			&i.LastName,
+			&i.Role,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCountries = `-- name: ListCountries :many
 SELECT id, iso_code3, country_name, dialing_code
 FROM countries

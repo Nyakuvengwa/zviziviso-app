@@ -18,3 +18,8 @@ ORDER BY province_name;
 SELECT * 
 FROM provinces
 WHERE id = $1;
+
+-- name: GetUserByEmailOrUsername :many 
+SELECT *
+FROM users
+WHERE email = $1 OR username = $2;

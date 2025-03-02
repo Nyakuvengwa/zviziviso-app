@@ -12,6 +12,7 @@ type Querier interface {
 	GetCountry(ctx context.Context, id int32) (Country, error)
 	GetProvincesByCountryId(ctx context.Context, countryID int32) ([]Province, error)
 	GetProvincesById(ctx context.Context, id int32) (Province, error)
+	GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEmailOrUsernameParams) ([]User, error)
 	ListCountries(ctx context.Context) ([]Country, error)
 }
 

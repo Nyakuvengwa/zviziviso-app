@@ -41,6 +41,10 @@ func (app *Application) Mount() http.Handler {
 			r.Post("/", app.CreateNewUser)
 			r.Get("/{userId}", app.GetUserSummaryDetails)
 		})
+
+		r.Route("/death_notice", func(r chi.Router) {
+			r.Get("/", app.NewDeathNotice)
+		})
 	})
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {

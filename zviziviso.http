@@ -27,3 +27,6 @@ content-type: application/json
 
 ###
 GET {{baseUrl}}/user/7ea223c6-b63a-4b7c-b66f-c1377a276434 HTTP/1.1
+
+###
+GET {{baseUrl}}/death_notice HTTP/1.1

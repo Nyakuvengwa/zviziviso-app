@@ -12,6 +12,64 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createNewDeathNotice = `-- name: CreateNewDeathNotice :one
+INSERT INTO death_notices (full_name, date_of_death, age, cause_of_death, funeral_parlour_id, address_id, obituary, image_url)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING death_notice_id
+`
+
+type CreateNewDeathNoticeParams struct {
+	FullName         string      `json:"full_name"`
+	DateOfDeath      pgtype.Date `json:"date_of_death"`
+	Age              pgtype.Int4 `json:"age"`
+	CauseOfDeath     pgtype.Text `json:"cause_of_death"`
+	FuneralParlourID pgtype.UUID `json:"funeral_parlour_id"`
+	AddressID        pgtype.UUID `json:"address_id"`
+	Obituary         pgtype.Text `json:"obituary"`
+	ImageUrl         pgtype.Text `json:"image_url"`
+}
+
+func (q *Queries) CreateNewDeathNotice(ctx context.Context, arg CreateNewDeathNoticeParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createNewDeathNotice,
+		arg.FullName,
+		arg.DateOfDeath,
+		arg.Age,
+		arg.CauseOfDeath,
+		arg.FuneralParlourID,
+		arg.AddressID,
+		arg.Obituary,
+		arg.ImageUrl,
+	)
+	var death_notice_id uuid.UUID
+	err := row.Scan(&death_notice_id)
+	return death_notice_id, err
+}
+
+const createNewFuneralParlour = `-- name: CreateNewFuneralParlour :one
+INSERT INTO funeral_parlours (name, address, contact_number, email)
+VALUES ($1, $2, $3, $4)
+RETURNING funeral_parlour_id
+`
+
+type CreateNewFuneralParlourParams struct {
+	Name          string      `json:"name"`
+	Address       pgtype.Text `json:"address"`
+	ContactNumber pgtype.Text `json:"contact_number"`
+	Email         pgtype.Text `json:"email"`
+}
+
+func (q *Queries) CreateNewFuneralParlour(ctx context.Context, arg CreateNewFuneralParlourParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createNewFuneralParlour,
+		arg.Name,
+		arg.Address,
+		arg.ContactNumber,
+		arg.Email,
+	)
+	var funeral_parlour_id uuid.UUID
+	err := row.Scan(&funeral_parlour_id)
+	return funeral_parlour_id, err
+}
+
 const createUserDetails = `-- name: CreateUserDetails :one
 INSERT INTO users (username, email, password_hash, first_name, last_name, role)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -55,6 +113,52 @@ func (q *Queries) GetCountry(ctx context.Context, id int32) (Country, error) {
 		&i.IsoCode3,
 		&i.CountryName,
 		&i.DialingCode,
+	)
+	return i, err
+}
+
+const getDeathNoticeById = `-- name: GetDeathNoticeById :one
+SELECT death_notice_id, full_name, date_of_death, age, cause_of_death, funeral_parlour_id, address_id, obituary, image_url, created_at, updated_at
+FROM death_notices
+WHERE death_notice_id = $1
+`
+
+func (q *Queries) GetDeathNoticeById(ctx context.Context, deathNoticeID uuid.UUID) (DeathNotice, error) {
+	row := q.db.QueryRow(ctx, getDeathNoticeById, deathNoticeID)
+	var i DeathNotice
+	err := row.Scan(
+		&i.DeathNoticeID,
+		&i.FullName,
+		&i.DateOfDeath,
+		&i.Age,
+		&i.CauseOfDeath,
+		&i.FuneralParlourID,
+		&i.AddressID,
+		&i.Obituary,
+		&i.ImageUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getFuneralParlourById = `-- name: GetFuneralParlourById :one
+SELECT funeral_parlour_id, name, address, contact_number, email, created_at, updated_at
+FROM funeral_parlours
+WHERE funeral_parlour_id = $1
+`
+
+func (q *Queries) GetFuneralParlourById(ctx context.Context, funeralParlourID uuid.UUID) (FuneralParlour, error) {
+	row := q.db.QueryRow(ctx, getFuneralParlourById, funeralParlourID)
+	var i FuneralParlour
+	err := row.Scan(
+		&i.FuneralParlourID,
+		&i.Name,
+		&i.Address,
+		&i.ContactNumber,
+		&i.Email,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

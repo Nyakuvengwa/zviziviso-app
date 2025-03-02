@@ -7,7 +7,7 @@ import (
 	"zviziviso-app/internal/models"
 )
 
-func NewProblemDetails(w http.ResponseWriter, status int, title string, detail string) {
+func NewProblemDetailsErrorResponse(w http.ResponseWriter, status int, title string, detail string) {
 	pd := models.ProblemDetails{
 		Type:   fmt.Sprintf("%s/%d", "https://httpstatuses.com", status),
 		Title:  title,

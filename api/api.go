@@ -24,11 +24,17 @@ func (app *Application) Mount() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	// add accept  application json header
+	r.Use(middleware.SetHeader("Content-Type", "application/json"))
+
 	r.Route("/v1", func(r chi.Router) {
 
 		r.Route("/countries", func(r chi.Router) {
 			r.Get("/", app.ListCountries)
-			r.Get("/{countryId}", app.GetCountryById)
+			r.Route("/{countryId}", func(r chi.Router) {
+				r.Get("/", app.GetCountryById)
+				r.Get("/provinces", app.GetProvincesByCountryId)
+			})
 		})
 	})
 

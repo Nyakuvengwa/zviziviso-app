@@ -11,7 +11,8 @@ WHERE id = $1;
 -- name: GetProvincesByCountryId :many
 SELECT * 
 FROM provinces
-WHERE country_id = $1;
+WHERE country_id = $1
+ORDER BY province_name;
 
 -- name: GetProvincesById :one
 SELECT * 

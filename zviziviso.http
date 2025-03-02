@@ -1,4 +1,5 @@
 @baseUrl  = http://localhost:7653/v1
+@countryId = 13
 
 ###
 GET {{baseUrl}} HTTP/1.1
@@ -7,7 +8,7 @@ GET {{baseUrl}} HTTP/1.1
 GET {{baseUrl}}/countries HTTP/1.1
 
 ###
-GET {{baseUrl}}/countries/1 HTTP/1.1
+GET {{baseUrl}}/countries/{{countryId}} HTTP/1.1
 
 ###
-GET {{baseUrl}}/countries/hello HTTP/1.1
+GET {{baseUrl}}/countries/{{countryId}}/provinces HTTP/1.1

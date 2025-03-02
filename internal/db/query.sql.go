@@ -31,6 +31,7 @@ const getProvincesByCountryId = `-- name: GetProvincesByCountryId :many
 SELECT id, country_id, province_name, code 
 FROM provinces
 WHERE country_id = $1
+ORDER BY province_name
 `
 
 func (q *Queries) GetProvincesByCountryId(ctx context.Context, countryID int32) ([]Province, error) {

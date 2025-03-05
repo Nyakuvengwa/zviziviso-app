@@ -106,14 +106,14 @@ func (app *Application) GetUserSummaryDetails(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	countries, err := app.service.GetUserSummaryDetails(ctx, uuid.MustParse(userId))
+	user, err := app.service.GetUserSummaryDetails(ctx, uuid.MustParse(userId))
 
 	if err != nil {
 		log.Printf("Error: %v, ", err)
 		NewProblemDetailsErrorResponse(w, http.StatusInternalServerError, "Unhandled server error", err.Error())
 		return
 	}
-	json.NewEncoder(w).Encode(countries)
+	json.NewEncoder(w).Encode(user)
 
 }
 

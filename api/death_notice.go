@@ -9,32 +9,15 @@ import (
 	"time"
 )
 
-type createNewFuneralParlourRequest struct {
-	Name          string `json:"name"`
-	Address       string `json:"address"`
-	ContactNumber string `json:"contact_number"`
-	Email         string `json:"email"`
-}
-
-type createNewAddressRequest struct {
-	AddressType   string `json:"address_type"`
-	Address       string `json:"address"`
-	City          string `json:"city"`
-	Province      string `json:"province"`
-	PostalCode    string `json:"postal_code"`
-	ContactPerson string `json:"contact_person"`
-	ContactNumber string `json:"contact_number"`
-}
-
 type createDeathNoticeRequest struct {
-	FullName       string                         `json:"full_name"`
-	DateOfDeath    time.Time                      `json:"date_of_death"`
-	Age            int32                          `json:"age"`
-	CauseOfDeath   string                         `json:"cause_of_death"`
-	FuneralParlour createNewFuneralParlourRequest `json:"funeral_parlour"`
-	Address        createNewAddressRequest        `json:"address"`
-	Obituary       string                         `json:"obituary"`
-	ImageUrl       string                         `json:"image_url"`
+	FirstName    string    `json:"first_name"`
+	LastName     string    `json:"last_name"`
+	Title        string    `json:"title"`
+	DateOfDeath  time.Time `json:"date_of_death"`
+	DateOfBirth  time.Time `json:"date_of_birth"`
+	CauseOfDeath string    `json:"cause_of_death"`
+	Obituary     string    `json:"obituary"`
+	ImageUrl     string    `json:"image_url"`
 }
 
 func (app *Application) CreateNewDeathNotice(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +26,12 @@ func (app *Application) CreateNewDeathNotice(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Printf("Error: %v, ", err)
 		NewProblemDetailsErrorResponse(w, http.StatusBadRequest, INVALID_REQUEST, "Invalid request body provided.")
+		return
+	}
+	err = validateDeathNotice(deathNotice)
+	if err != nil {
+		log.Printf("Error: %v, ", err)
+		NewProblemDetailsErrorResponse(w, http.StatusBadRequest, INVALID_REQUEST, err.Error())
 		return
 	}
 
@@ -54,24 +43,58 @@ func (app *Application) CreateNewDeathNotice(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// TODO: Add logic which saves the Funeral parlour, Address, notice in that order and in a transaction.
-
 	json.NewEncoder(w).Encode(deathNotice)
 }
 
 func validateDeathNotice(deathNotice createDeathNoticeRequest) error {
 	errorMessages := make([]string, 5)
-	if deathNotice.FuneralParlour == (createNewFuneralParlourRequest{}) {
 
+	if strings.TrimSpace(deathNotice.CauseOfDeath) == "" {
+		errorMessages = append(errorMessages, "Cause of death cannot be empty")
 	}
 
-	if len(errorMessages) > 0 {
-		return fmt.Errorf(strings.Join(errorMessages, ", "))
+	if strings.TrimSpace(deathNotice.FirstName) == "" {
+		errorMessages = append(errorMessages, "First name can not be empty")
+	}
+
+	if len(strings.TrimSpace(deathNotice.FirstName)) < 3 {
+		errorMessages = append(errorMessages, "First name must be at least 3 characters long")
+	}
+
+	if strings.TrimSpace(deathNotice.LastName) == "" {
+		errorMessages = append(errorMessages, "Last name can not be empty")
+	}
+
+	if len(strings.TrimSpace(deathNotice.LastName)) < 3 {
+		errorMessages = append(errorMessages, "Last name must be at least 3 characters long")
+	}
+
+	if deathNotice.DateOfDeath.IsZero() {
+		errorMessages = append(errorMessages, "Date of death cannot be empty")
+	}
+
+	if deathNotice.DateOfBirth.IsZero() {
+		errorMessages = append(errorMessages, "Date of birth cannot be empty")
+	}
+
+	if deathNotice.DateOfBirth.After(deathNotice.DateOfDeath) {
+		errorMessages = append(errorMessages, "Date of birth cannot be after date of death")
+	}
+
+	var filteredErrorMessages []string
+	for _, msg := range errorMessages {
+		if msg != "" {
+			filteredErrorMessages = append(filteredErrorMessages, msg)
+		}
+	}
+
+	if len(filteredErrorMessages) > 0 {
+		return fmt.Errorf(strings.Join(filteredErrorMessages, ", "))
 	}
 	return nil
 }
 
-func (app *Application) NewDeathNotice(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetDeathNoticeById(w http.ResponseWriter, r *http.Request) {
 	var deathNotice createDeathNoticeRequest
 	json.NewEncoder(w).Encode(deathNotice)
 }

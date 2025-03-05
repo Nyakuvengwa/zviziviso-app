@@ -12,11 +12,10 @@ import (
 
 type Querier interface {
 	CreateNewDeathNotice(ctx context.Context, arg CreateNewDeathNoticeParams) (uuid.UUID, error)
-	CreateNewFuneralParlour(ctx context.Context, arg CreateNewFuneralParlourParams) (uuid.UUID, error)
 	CreateUserDetails(ctx context.Context, arg CreateUserDetailsParams) (uuid.UUID, error)
 	GetCountry(ctx context.Context, id int32) (Country, error)
 	GetDeathNoticeById(ctx context.Context, deathNoticeID uuid.UUID) (DeathNotice, error)
-	GetFuneralParlourById(ctx context.Context, funeralParlourID uuid.UUID) (FuneralParlour, error)
+	GetDeathNotices(ctx context.Context, arg GetDeathNoticesParams) ([]DeathNotice, error)
 	GetProvincesByCountryId(ctx context.Context, countryID int32) ([]Province, error)
 	GetProvincesById(ctx context.Context, id int32) (Province, error)
 	GetUserByEmailOrUsername(ctx context.Context, arg GetUserByEmailOrUsernameParams) ([]User, error)

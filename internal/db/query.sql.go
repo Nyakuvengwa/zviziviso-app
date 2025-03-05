@@ -13,61 +13,38 @@ import (
 )
 
 const createNewDeathNotice = `-- name: CreateNewDeathNotice :one
-INSERT INTO death_notices (full_name, date_of_death, age, cause_of_death, funeral_parlour_id, address_id, obituary, image_url)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO death_notices (first_name, last_name, title, date_of_death, date_of_birth, cause_of_death, obituary, image_url, user_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING death_notice_id
 `
 
 type CreateNewDeathNoticeParams struct {
-	FullName         string      `json:"full_name"`
-	DateOfDeath      pgtype.Date `json:"date_of_death"`
-	Age              pgtype.Int4 `json:"age"`
-	CauseOfDeath     pgtype.Text `json:"cause_of_death"`
-	FuneralParlourID pgtype.UUID `json:"funeral_parlour_id"`
-	AddressID        pgtype.UUID `json:"address_id"`
-	Obituary         pgtype.Text `json:"obituary"`
-	ImageUrl         pgtype.Text `json:"image_url"`
+	FirstName    string      `json:"first_name"`
+	LastName     string      `json:"last_name"`
+	Title        pgtype.Text `json:"title"`
+	DateOfDeath  pgtype.Date `json:"date_of_death"`
+	DateOfBirth  pgtype.Date `json:"date_of_birth"`
+	CauseOfDeath pgtype.Text `json:"cause_of_death"`
+	Obituary     pgtype.Text `json:"obituary"`
+	ImageUrl     pgtype.Text `json:"image_url"`
+	UserID       pgtype.UUID `json:"user_id"`
 }
 
 func (q *Queries) CreateNewDeathNotice(ctx context.Context, arg CreateNewDeathNoticeParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createNewDeathNotice,
-		arg.FullName,
+		arg.FirstName,
+		arg.LastName,
+		arg.Title,
 		arg.DateOfDeath,
-		arg.Age,
+		arg.DateOfBirth,
 		arg.CauseOfDeath,
-		arg.FuneralParlourID,
-		arg.AddressID,
 		arg.Obituary,
 		arg.ImageUrl,
+		arg.UserID,
 	)
 	var death_notice_id uuid.UUID
 	err := row.Scan(&death_notice_id)
 	return death_notice_id, err
-}
-
-const createNewFuneralParlour = `-- name: CreateNewFuneralParlour :one
-INSERT INTO funeral_parlours (name, address, contact_number, email)
-VALUES ($1, $2, $3, $4)
-RETURNING funeral_parlour_id
-`
-
-type CreateNewFuneralParlourParams struct {
-	Name          string      `json:"name"`
-	Address       pgtype.Text `json:"address"`
-	ContactNumber pgtype.Text `json:"contact_number"`
-	Email         pgtype.Text `json:"email"`
-}
-
-func (q *Queries) CreateNewFuneralParlour(ctx context.Context, arg CreateNewFuneralParlourParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createNewFuneralParlour,
-		arg.Name,
-		arg.Address,
-		arg.ContactNumber,
-		arg.Email,
-	)
-	var funeral_parlour_id uuid.UUID
-	err := row.Scan(&funeral_parlour_id)
-	return funeral_parlour_id, err
 }
 
 const createUserDetails = `-- name: CreateUserDetails :one
@@ -118,7 +95,7 @@ func (q *Queries) GetCountry(ctx context.Context, id int32) (Country, error) {
 }
 
 const getDeathNoticeById = `-- name: GetDeathNoticeById :one
-SELECT death_notice_id, full_name, date_of_death, age, cause_of_death, funeral_parlour_id, address_id, obituary, image_url, created_at, updated_at
+SELECT death_notice_id, first_name, last_name, title, date_of_death, date_of_birth, cause_of_death, obituary, image_url, user_id, created_at, updated_at
 FROM death_notices
 WHERE death_notice_id = $1
 `
@@ -128,39 +105,65 @@ func (q *Queries) GetDeathNoticeById(ctx context.Context, deathNoticeID uuid.UUI
 	var i DeathNotice
 	err := row.Scan(
 		&i.DeathNoticeID,
-		&i.FullName,
+		&i.FirstName,
+		&i.LastName,
+		&i.Title,
 		&i.DateOfDeath,
-		&i.Age,
+		&i.DateOfBirth,
 		&i.CauseOfDeath,
-		&i.FuneralParlourID,
-		&i.AddressID,
 		&i.Obituary,
 		&i.ImageUrl,
+		&i.UserID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const getFuneralParlourById = `-- name: GetFuneralParlourById :one
-SELECT funeral_parlour_id, name, address, contact_number, email, created_at, updated_at
-FROM funeral_parlours
-WHERE funeral_parlour_id = $1
+const getDeathNotices = `-- name: GetDeathNotices :many
+SELECT death_notice_id, first_name, last_name, title, date_of_death, date_of_birth, cause_of_death, obituary, image_url, user_id, created_at, updated_at
+FROM death_notices
+ORDER BY created_at DESC
+Limit $1
+Offset $2
 `
 
-func (q *Queries) GetFuneralParlourById(ctx context.Context, funeralParlourID uuid.UUID) (FuneralParlour, error) {
-	row := q.db.QueryRow(ctx, getFuneralParlourById, funeralParlourID)
-	var i FuneralParlour
-	err := row.Scan(
-		&i.FuneralParlourID,
-		&i.Name,
-		&i.Address,
-		&i.ContactNumber,
-		&i.Email,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+type GetDeathNoticesParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetDeathNotices(ctx context.Context, arg GetDeathNoticesParams) ([]DeathNotice, error) {
+	rows, err := q.db.Query(ctx, getDeathNotices, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []DeathNotice{}
+	for rows.Next() {
+		var i DeathNotice
+		if err := rows.Scan(
+			&i.DeathNoticeID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Title,
+			&i.DateOfDeath,
+			&i.DateOfBirth,
+			&i.CauseOfDeath,
+			&i.Obituary,
+			&i.ImageUrl,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getProvincesByCountryId = `-- name: GetProvincesByCountryId :many

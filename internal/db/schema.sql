@@ -17,14 +17,15 @@ CREATE TABLE provinces (
 -- DeathNotice Table
 CREATE TABLE death_notices (
     death_notice_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    full_name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    title VARCHAR(50) NULL,
     date_of_death DATE NOT NULL,
-    age INTEGER,
+    date_of_birth DATE NOT NULL,
     cause_of_death TEXT,
-    funeral_parlour_id UUID REFERENCES funeral_parlours(funeral_parlour_id),
-    address_id UUID REFERENCES addresses(address_id),
     obituary TEXT,
     image_url VARCHAR(255),
+    user_id UUID REFERENCES death_notices(user_id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

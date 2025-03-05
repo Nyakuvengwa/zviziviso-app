@@ -30,17 +30,18 @@ type Country struct {
 }
 
 type DeathNotice struct {
-	DeathNoticeID    uuid.UUID          `json:"death_notice_id"`
-	FullName         string             `json:"full_name"`
-	DateOfDeath      pgtype.Date        `json:"date_of_death"`
-	Age              pgtype.Int4        `json:"age"`
-	CauseOfDeath     pgtype.Text        `json:"cause_of_death"`
-	FuneralParlourID pgtype.UUID        `json:"funeral_parlour_id"`
-	AddressID        pgtype.UUID        `json:"address_id"`
-	Obituary         pgtype.Text        `json:"obituary"`
-	ImageUrl         pgtype.Text        `json:"image_url"`
-	CreatedAt        pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
+	DeathNoticeID uuid.UUID          `json:"death_notice_id"`
+	FirstName     string             `json:"first_name"`
+	LastName      string             `json:"last_name"`
+	Title         pgtype.Text        `json:"title"`
+	DateOfDeath   pgtype.Date        `json:"date_of_death"`
+	DateOfBirth   pgtype.Date        `json:"date_of_birth"`
+	CauseOfDeath  pgtype.Text        `json:"cause_of_death"`
+	Obituary      pgtype.Text        `json:"obituary"`
+	ImageUrl      pgtype.Text        `json:"image_url"`
+	UserID        pgtype.UUID        `json:"user_id"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }
 
 type DeathNoticeComment struct {

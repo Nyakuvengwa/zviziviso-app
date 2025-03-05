@@ -1,5 +1,6 @@
 @baseUrl  = http://localhost:7653/v1
 @countryId = 13
+@UserIdHeader= X-UserId: 7ea223c6-b63a-4b7c-b66f-c1377a276434 
 
 ###
 GET {{baseUrl}} HTTP/1.1
@@ -29,4 +30,20 @@ content-type: application/json
 GET {{baseUrl}}/user/7ea223c6-b63a-4b7c-b66f-c1377a276434 HTTP/1.1
 
 ###
-GET {{baseUrl}}/death_notice HTTP/1.1
+GET {{baseUrl}}/death_notice/1 HTTP/1.1
+{{UserIdHeader}}
+
+###
+POST {{baseUrl}}/death_notice HTTP/1.1
+{{UserIdHeader}}
+content-type: application/json
+
+{
+  "first_name": "Test QA",
+  "last_name": "User",
+  "title": "Mr",
+  "date_of_death": "1990-01-01T00:00:00Z",
+  "date_of_birth": "1989-01-01T00:00:00Z",
+  "cause_of_death": "Peaceful",
+  "obituary": "This is a obituary"
+}

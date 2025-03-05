@@ -45,23 +45,19 @@ FROM users
 WHERE user_id = $1;
 
 -- name: CreateNewDeathNotice :one
-INSERT INTO death_notices (full_name, date_of_death, age, cause_of_death, funeral_parlour_id, address_id, obituary, image_url)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO death_notices (first_name, last_name, title, date_of_death, date_of_birth, cause_of_death, obituary, image_url, user_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING death_notice_id;
+
 
 -- name: GetDeathNoticeById :one
 SELECT *
 FROM death_notices
 WHERE death_notice_id = $1;
 
--- name: CreateNewFuneralParlour :one 
-INSERT INTO funeral_parlours (name, address, contact_number, email)
-VALUES ($1, $2, $3, $4)
-RETURNING funeral_parlour_id;
-
--- name: GetFuneralParlourById :one
+-- name: GetDeathNotices :many 
 SELECT *
-FROM funeral_parlours
-WHERE funeral_parlour_id = $1;
-
---
+FROM death_notices
+ORDER BY created_at DESC
+Limit $1
+Offset $2;

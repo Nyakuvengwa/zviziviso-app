@@ -105,7 +105,6 @@ func (app *Application) GetUserSummaryDetails(w http.ResponseWriter, r *http.Req
 		NewProblemDetailsErrorResponse(w, http.StatusBadRequest, "Invalid user id provided", "Invalid url path parameter provided.")
 		return
 	}
-
 	user, err := app.service.GetUserSummaryDetails(ctx, uuid.MustParse(userId))
 
 	if err != nil {
@@ -114,7 +113,6 @@ func (app *Application) GetUserSummaryDetails(w http.ResponseWriter, r *http.Req
 		return
 	}
 	json.NewEncoder(w).Encode(user)
-
 }
 
 func validateUser(user CreateUserRequest) error {
